@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: santech-manager
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SANTECH_DEFAULT_USERNAME
+        value: sago87
+      - key: SANTECH_DEFAULT_PASSWORD
+        sync: false
+    disk:
+      name: db
+      mountPath: /data
+      sizeGB: 1

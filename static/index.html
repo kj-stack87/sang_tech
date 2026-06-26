@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>상테크 & 리셀 실적</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <section id="auth-view" class="auth-shell">
+      <div class="auth-panel">
+        <p class="eyebrow">개인 실적 관리</p>
+        <h1>상테크 & 리셀 실적</h1>
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" type="button" data-auth-mode="login">로그인</button>
+          <button class="auth-tab" type="button" data-auth-mode="register">회원가입</button>
+        </div>
+        <div id="auth-error" class="error-message" hidden></div>
+        <form id="auth-form">
+          <label>
+            <span>ID</span>
+            <input type="text" name="username" autocomplete="username" minlength="3" maxlength="40" required />
+          </label>
+          <label>
+            <span>비밀번호</span>
+            <input type="password" name="password" autocomplete="current-password" minlength="4" maxlength="120" required />
+          </label>
+          <button class="primary-button" type="submit" id="auth-submit">로그인</button>
+        </form>
+      </div>
+    </section>
+
+    <header class="app-header" id="app-header" hidden>
+      <div>
+        <p class="eyebrow">모바일 실적 관리</p>
+        <h1>상테크 & 리셀 실적</h1>
+      </div>
+      <div class="header-actions">
+        <span id="current-user-label" class="user-pill"></span>
+        <button class="icon-button" id="refresh-all" type="button" aria-label="새로고침" title="새로고침">↻</button>
+        <button class="secondary-button" id="logout-button" type="button">로그아웃</button>
+      </div>
+    </header>
+
+    <main class="app-shell" id="app-shell" hidden>
+      <div id="global-error" class="error-message" hidden></div>
+
+      <section id="dashboard-view" class="tab-panel active">
+        <div class="dashboard-controls">
+          <label class="check-control">
+            <input type="checkbox" id="dashboard-include-current" checked />
+            <span>당월 포함</span>
+          </label>
+        </div>
+        <div id="dashboard-cards" class="summary-grid"></div>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>월별 수익</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>월</th>
+                  <th>마일단가</th>
+                  <th>총마일</th>
+                  <th>대한항공</th>
+                  <th>아시아나</th>
+                  <th>하나마일</th>
+                  <th>매매</th>
+                  <th>환급</th>
+                  <th>상테크손익</th>
+                  <th>적립</th>
+                  <th>청구할인</th>
+                  <th>크림수익</th>
+                  <th>총손익</th>
+                </tr>
+              </thead>
+              <tbody id="monthly-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>마일리지 현황</h2>
+          </div>
+          <div id="mileage-cards" class="summary-grid"></div>
+          <label class="unit-input">
+            <span>기준가</span>
+            <input id="mile-unit-price" type="number" min="0" step="0.1" inputmode="decimal" />
+            <span>원 / 마일</span>
+          </label>
+          <div id="mileage-value" class="value-grid"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>연도</th>
+                  <th>대한항공</th>
+                  <th>아시아나</th>
+                  <th>하나마일</th>
+                  <th>합계</th>
+                </tr>
+              </thead>
+              <tbody id="mileage-year-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="santech-view" class="tab-panel">
+        <div class="section-heading top-line">
+          <h2>상테크</h2>
+          <select id="santech-month" aria-label="상테크 월 선택"></select>
+        </div>
+
+        <div id="santech-readonly" class="readonly-badge" hidden>시드 데이터 / 읽기 전용</div>
+        <div id="santech-summary" class="metric-strip"></div>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>카드별 누적 사용량</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>카드</th>
+                  <th>건수</th>
+                  <th>사용액</th>
+                  <th>환급</th>
+                  <th>할인</th>
+                  <th>적립</th>
+                  <th>하나마일</th>
+                  <th>손익</th>
+                </tr>
+              </thead>
+              <tbody id="santech-card-usage-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>카드 관리</h2>
+          </div>
+          <form id="santech-card-form" class="card-rule-form">
+            <label>
+              <span>카드명</span>
+              <input type="text" name="name" maxlength="40" required />
+            </label>
+            <label>
+              <span>혜택</span>
+              <select name="benefit_type" id="card-benefit-type">
+                <option value="mileage">마일리지</option>
+                <option value="cashback">캐시백</option>
+                <option value="discount">청구할인</option>
+              </select>
+            </label>
+            <label class="card-mileage-field">
+              <span>적립처</span>
+              <select name="mileage_target">
+                <option value="korean_air">대한항공</option>
+                <option value="asiana">아시아나</option>
+                <option value="hana_mile" selected>하나마일</option>
+              </select>
+            </label>
+            <label class="card-mileage-field">
+              <span>사용금액</span>
+              <input type="number" name="mileage_spend_amount" min="1" step="1" inputmode="numeric" value="1500" />
+            </label>
+            <label class="card-mileage-field">
+              <span>적립마일</span>
+              <input type="number" name="mileage_earn_amount" min="0" step="0.1" inputmode="decimal" value="1" />
+            </label>
+            <label class="card-rate-field">
+              <span>혜택률(%)</span>
+              <input type="number" name="reward_rate" min="0" step="0.1" inputmode="decimal" value="1" />
+            </label>
+            <label class="card-rate-field card-cap-field">
+              <span>월 한도</span>
+              <input type="number" name="monthly_cap" min="1" step="1" inputmode="numeric" value="100000" />
+            </label>
+            <label class="checkbox-label card-rate-field">
+              <input type="checkbox" name="is_unlimited" id="card-unlimited" checked />
+              <span>무제한</span>
+            </label>
+            <button class="secondary-button" type="submit">카드 추가</button>
+          </form>
+          <div class="table-wrap compact-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>카드</th>
+                  <th>혜택</th>
+                  <th>조건</th>
+                  <th>삭제</th>
+                </tr>
+              </thead>
+              <tbody id="santech-card-rules-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="surface tool-surface">
+          <form id="santech-form">
+            <fieldset id="santech-fieldset">
+              <div class="form-grid">
+                <label>
+                  <span>날짜</span>
+                  <input type="date" name="date" id="santech-date" required />
+                </label>
+                <label>
+                  <span>구매상품</span>
+                  <select name="product" required>
+                    <option value="신세계상품권">신세계상품권</option>
+                    <option value="북앤라이프">북앤라이프</option>
+                    <option value="컬쳐랜드">컬쳐랜드</option>
+                    <option value="틴캐시">틴캐시</option>
+                    <option value="게임온패스">게임온패스</option>
+                  </select>
+                </label>
+                <label>
+                  <span>카드</span>
+                  <select name="card" required>
+                    <option value="MG">MG</option>
+                    <option value="하나마일">하나마일</option>
+                    <option value="any">any</option>
+                    <option value="원더">원더</option>
+                    <option value="행복">행복</option>
+                  </select>
+                </label>
+                <label>
+                  <span>매매</span>
+                  <input type="number" name="purchase_amount" min="0" step="1" inputmode="numeric" required />
+                </label>
+                <label>
+                  <span>갯수</span>
+                  <input type="number" name="quantity" min="1" max="100" step="1" inputmode="numeric" value="1" required />
+                </label>
+                <label>
+                  <span>자동 적립</span>
+                  <input type="number" name="point_amount" min="0" step="1" inputmode="numeric" value="0" readonly />
+                </label>
+                <label>
+                  <span>자동 할인</span>
+                  <input type="number" name="cashback_amount" min="0" step="1" inputmode="numeric" value="0" readonly />
+                </label>
+                <label>
+                  <span>대한항공 마일</span>
+                  <input type="number" name="korean_air" min="0" step="1" inputmode="numeric" value="0" />
+                </label>
+                <label>
+                  <span>아시아나 마일</span>
+                  <input type="number" name="asiana" min="0" step="1" inputmode="numeric" value="0" />
+                </label>
+                <label>
+                  <span>자동 하나마일</span>
+                  <input type="number" name="hana_mile" min="0" step="1" inputmode="numeric" value="0" readonly />
+                </label>
+                <label class="full-span">
+                  <span>메모</span>
+                  <input type="text" name="memo" maxlength="120" />
+                </label>
+              </div>
+              <div class="recent-loader">
+                <label>
+                  <span>최근 입력</span>
+                  <select id="santech-recent-select" aria-label="최근 상테크 입력 선택"></select>
+                </label>
+                <button class="secondary-button" type="button" id="santech-load-recent">불러오기</button>
+              </div>
+              <div class="form-actions">
+                <strong id="santech-preview" class="profit-preview neutral">예상 수익: 0원</strong>
+                <button class="primary-button" type="submit">저장</button>
+              </div>
+            </fieldset>
+          </form>
+        </section>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>거래 목록</h2>
+            <select id="santech-refund-filter" aria-label="환급 상태 필터">
+              <option value="all">전체</option>
+              <option value="refunded">환급완료</option>
+              <option value="pending">미환급</option>
+            </select>
+          </div>
+          <div class="bulk-refund-bar">
+            <label>
+              <span>환급처</span>
+              <select id="bulk-refund-vendor">
+                <option value="포인트로페이">포인트로페이</option>
+                <option value="페이즈">페이즈</option>
+                <option value="마일캐시">마일캐시</option>
+                <option value="원천">원천</option>
+                <option value="골드">골드</option>
+                <option value="팔라고">팔라고</option>
+                <option value="GLN">GLN</option>
+              </select>
+            </label>
+            <label>
+              <span>환급액</span>
+              <input type="number" id="bulk-refund-amount" min="0" step="1" inputmode="numeric" value="0" />
+            </label>
+            <button class="secondary-button" type="button" id="bulk-refund-apply">입력</button>
+            <button class="danger-action-button" type="button" id="bulk-delete-apply">선택삭제</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="santech-select-all" aria-label="거래 전체 선택" /></th>
+                  <th>날짜</th>
+                  <th>구매상품</th>
+                  <th>카드</th>
+                  <th>매매</th>
+                  <th>환급</th>
+                  <th>환급처</th>
+                  <th>캐시백</th>
+                  <th>수익</th>
+                  <th>대한항공</th>
+                  <th>아시아나</th>
+                  <th>하나마일</th>
+                  <th>메모</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="santech-tbody"></tbody>
+              <tfoot id="santech-tfoot"></tfoot>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="cream-view" class="tab-panel">
+        <div class="section-heading top-line">
+          <h2>크림/솔드아웃</h2>
+        </div>
+
+        <section class="surface tool-surface">
+          <form id="cream-form">
+            <div class="form-grid">
+              <label>
+                <span>날짜</span>
+                <input type="date" name="date" id="cream-date" min="2026-07-01" required />
+              </label>
+              <label>
+                <span>플랫폼</span>
+                <select name="platform" required>
+                  <option value="크림">크림</option>
+                  <option value="솔드아웃">솔드아웃</option>
+                </select>
+              </label>
+              <label>
+                <span>카드사</span>
+                <select name="card_company" required>
+                  <option value="신한 에어1.5">신한 에어1.5</option>
+                  <option value="삼성 스마">삼성 스마</option>
+                  <option value="삼성 항공">삼성 항공</option>
+                  <option value="기업 마일앤조이">기업 마일앤조이</option>
+                  <option value="우리 인피니트">우리 인피니트</option>
+                </select>
+              </label>
+              <label>
+                <span>구매</span>
+                <input type="number" name="buy_amount" min="0" step="1" inputmode="numeric" required />
+              </label>
+              <label>
+                <span>판매</span>
+                <input type="number" name="sell_amount" min="0" step="1" inputmode="numeric" required />
+              </label>
+              <label>
+                <span>페이백</span>
+                <input type="number" name="payback_amount" min="0" step="1" inputmode="numeric" value="0" />
+              </label>
+              <label>
+                <span>대한항공</span>
+                <input type="number" name="korean_air" min="0" step="1" inputmode="numeric" value="0" />
+              </label>
+              <label>
+                <span>아시아나</span>
+                <input type="number" name="asiana" min="0" step="1" inputmode="numeric" value="0" />
+              </label>
+              <label class="full-span">
+                <span>조건</span>
+                <input type="text" name="condition" maxlength="160" />
+              </label>
+              <label class="full-span">
+                <span>메모</span>
+                <input type="text" name="memo" maxlength="120" />
+              </label>
+            </div>
+            <div class="form-actions">
+              <strong id="cream-preview" class="profit-preview neutral">예상 수익: 0원</strong>
+              <button class="primary-button" type="submit">저장</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>라이브 거래</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>월</th>
+                  <th>플랫폼</th>
+                  <th>카드사</th>
+                  <th>구매</th>
+                  <th>판매</th>
+                  <th>페이백</th>
+                  <th>수익</th>
+                  <th>조건</th>
+                  <th>삭제</th>
+                </tr>
+              </thead>
+              <tbody id="cream-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>과거 시드 요약</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>월</th>
+                  <th>대한항공</th>
+                  <th>아시아나</th>
+                  <th>구매합계</th>
+                  <th>수익</th>
+                </tr>
+              </thead>
+              <tbody id="cream-seed-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+    </main>
+
+    <nav class="bottom-nav" id="bottom-nav" aria-label="주요 화면" hidden>
+      <button class="nav-button active" type="button" data-tab="dashboard">
+        <span aria-hidden="true">◆</span>
+        <span>대시보드</span>
+      </button>
+      <button class="nav-button" type="button" data-tab="santech">
+        <span aria-hidden="true">◇</span>
+        <span>상테크</span>
+      </button>
+      <button class="nav-button" type="button" data-tab="cream">
+        <span aria-hidden="true">○</span>
+        <span>크림</span>
+      </button>
+    </nav>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js"></script>
+  </body>
+</html>
