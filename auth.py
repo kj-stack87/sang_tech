@@ -94,6 +94,12 @@ def ensure_default_user(db: Session):
     _create_user(db, username, password, is_seed_owner=_first_seed_owner_missing(db))
 
 
+def _matches_default_credentials(username: str, password: str) -> bool:
+    default_username = os.getenv("SANTECH_DEFAULT_USERNAME", "sago87").strip()
+    default_password = os.getenv("SANTECH_DEFAULT_PASSWORD")
+    return bool(default_username and default_password and username == default_username and password == default_password)
+
+
 def _set_session_cookie(response: Response, token: str):
     response.set_cookie(
         SESSION_COOKIE,
@@ -174,7 +180,19 @@ def register(payload: AuthRequest, response: Response, db: Session = Depends(get
 @router.post("/login")
 def login(payload: AuthRequest, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == payload.username).first()
-    if user is None or not _verify_password(payload.password, user.password_hash):
+    if user is None and _matches_default_credentials(payload.username, payload.password):
+        user = _create_user(db, payload.username, payload.password, is_seed_owner=_first_seed_owner_missing(db))
+
+    password_ok = bool(user and _verify_password(payload.password, user.password_hash))
+    if user and not password_ok and _matches_default_credentials(payload.username, payload.password):
+        user.password_hash = _hash_password(payload.password)
+        if _first_seed_owner_missing(db):
+            user.is_seed_owner = 1
+        db.commit()
+        db.refresh(user)
+        password_ok = True
+
+    if user is None or not password_ok:
         raise HTTPException(status_code=401, detail="ID 또는 비밀번호가 올바르지 않습니다.")
 
     seed_santech_cards_for_user(db, user.id)
