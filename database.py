@@ -11,18 +11,28 @@ def _database_path() -> str:
     return str(Path(__file__).resolve().with_name("santech.db"))
 
 
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{_database_path()}"
+def _database_url() -> str:
+    url = os.getenv("DATABASE_URL")
+    if url:
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql://", 1)
+        return url
+    return f"sqlite:///{_database_path()}"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    future=True,
-)
+
+SQLALCHEMY_DATABASE_URL = _database_url()
+engine_options = {"future": True}
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine_options["connect_args"] = {"check_same_thread": False}
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, **engine_options)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
 Base = declarative_base()
 
 
 def ensure_app_schema(engine):
+    if engine.dialect.name != "sqlite":
+        return
     columns = {
         "santech_transactions": {
             "user_id": "INTEGER",

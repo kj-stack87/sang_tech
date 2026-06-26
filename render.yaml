@@ -9,7 +9,5 @@ services:
         value: sago87
       - key: SANTECH_DEFAULT_PASSWORD
         sync: false
-    disk:
-      name: db
-      mountPath: /data
-      sizeGB: 1
+      - key: DATABASE_URL
+        sync: false

@@ -86,11 +86,16 @@ Render 배포에서는 `render.yaml`의 persistent disk가 `/data`에 마운트�
 
 PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 계속 실행하는 방식이 아니라, Render Web Service에 배포해야 합니다.
 
+무료로 오래 쓰려면 Render 무료 Web Service와 외부 무료 Postgres(Supabase 등)를 함께 사용하는 구성이 가장 안전합니다. Render 무료 Web Service는 15분 정도 요청이 없으면 잠들 수 있고, 다음 접속 때 1분 안팎으로 다시 깨어납니다. SQLite 파일 저장은 무료 Render 재시작/재배포 때 데이터가 사라질 수 있으므로, 폰에서 계속 관리할 용도라면 `DATABASE_URL`에 Postgres 연결 문자열을 넣어 사용하세요.
+
 1. Render에서 이 GitHub 저장소를 연결하고 `render.yaml`로 Web Service를 생성합니다.
-2. Render 환경변수에 `SANTECH_DEFAULT_PASSWORD`를 추가하고 기본 계정 비밀번호를 넣습니다.
-3. Render 서비스의 Deploy Hook URL을 복사합니다.
-4. GitHub 저장소 Settings > Secrets and variables > Actions에 `RENDER_DEPLOY_HOOK_URL` secret으로 Deploy Hook URL을 저장합니다.
-5. 이후 `main` 브랜치에 push하면 GitHub Actions가 문법 검사를 실행하고 Render 배포를 호출합니다.
+2. Supabase에서 무료 Postgres 프로젝트를 만들고 연결 문자열을 복사합니다.
+3. Render 환경변수에 아래 값을 추가합니다.
+   - `DATABASE_URL`: Supabase Postgres 연결 문자열
+   - `SANTECH_DEFAULT_PASSWORD`: 기본 계정 비밀번호
+4. Render 서비스의 Deploy Hook URL을 복사합니다.
+5. GitHub 저장소 Settings > Secrets and variables > Actions에 `RENDER_DEPLOY_HOOK_URL` secret으로 Deploy Hook URL을 저장합니다.
+6. 이후 `main` 브랜치에 push하면 GitHub Actions가 문법 검사를 실행하고 Render 배포를 호출합니다.
 
 기본 ID는 `SANTECH_DEFAULT_USERNAME=sago87`로 설정되어 있습니다. 비밀번호는 저장소에 커밋하지 않습니다.
 
