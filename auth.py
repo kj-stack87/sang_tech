@@ -82,6 +82,11 @@ def ensure_default_user(db: Session):
         return
     user = db.query(User).filter(User.username == username).first()
     if user:
+        user.password_hash = _hash_password(password)
+        if _first_seed_owner_missing(db):
+            user.is_seed_owner = 1
+        db.commit()
+        db.refresh(user)
         seed_santech_cards_for_user(db, user.id)
         if user.is_seed_owner:
             _assign_legacy_rows(db, user.id)
