@@ -44,6 +44,17 @@ class UserSession(Base):
     expires_at = Column(Text)
 
 
+class DailyEmailSetting(Base):
+    __tablename__ = "daily_email_settings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False, unique=True, index=True)
+    email = Column(Text)
+    enabled = Column(Integer, default=0)
+    last_sent_on = Column(Text)
+    updated_at = Column(Text)
+
+
 class SantechTransaction(Base):
     __tablename__ = "santech_transactions"
 

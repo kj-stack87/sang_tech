@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from auth import ensure_default_user, router as auth_router
 from database import SessionLocal, engine, ensure_app_schema
 from models import Base
-from routers import cream, dashboard, mileage, santech
+from routers import cream, dashboard, email_reports, mileage, santech
 from seed import run_seed
 
 
@@ -30,6 +30,7 @@ app.include_router(dashboard.router)
 app.include_router(santech.router)
 app.include_router(cream.router)
 app.include_router(mileage.router)
+app.include_router(email_reports.router)
 app.include_router(auth_router)
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

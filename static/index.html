@@ -47,6 +47,19 @@
 
       <section id="dashboard-view" class="tab-panel active">
         <div class="dashboard-controls">
+          <form id="email-settings-form" class="email-control">
+            <label>
+              <span>일일 메일</span>
+              <input type="email" name="email" id="daily-email-input" placeholder="mail@example.com" />
+            </label>
+            <label class="check-control">
+              <input type="checkbox" name="enabled" id="daily-email-enabled" />
+              <span>메일 활성화</span>
+            </label>
+            <button class="secondary-button" type="submit">저장</button>
+            <button class="secondary-button" type="button" id="daily-email-test">테스트</button>
+            <small id="daily-email-status"></small>
+          </form>
           <label class="check-control">
             <input type="checkbox" id="dashboard-include-current" checked />
             <span>당월 포함</span>

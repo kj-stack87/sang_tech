@@ -70,6 +70,17 @@ def _validate_card_name(value: str) -> str:
     return _validate_free_text(value, "card")
 
 
+def _validate_email(value: Optional[str]) -> Optional[str]:
+    value = _strip_optional(value)
+    if value is None:
+        return None
+    if len(value) > 120:
+        raise ValueError("email must be 120 characters or fewer")
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value):
+        raise ValueError("email must be a valid email address")
+    return value
+
+
 class SantechCreate(BaseModel):
     date: str
     product: str
@@ -316,6 +327,22 @@ class AuthRequest(BaseModel):
         if len(value) > 120:
             raise ValueError("password must be 120 characters or fewer")
         return value
+
+
+class DailyEmailSettingsUpdate(BaseModel):
+    email: Optional[str] = None
+    enabled: bool = False
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email(cls, value):
+        return _validate_email(value)
+
+    @model_validator(mode="after")
+    def validate_enabled_email(self):
+        if self.enabled and not self.email:
+            raise ValueError("email is required when daily email is enabled")
+        return self
 
 
 class CreamCreate(BaseModel):

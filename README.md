@@ -93,11 +93,24 @@ PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 
 3. Render 환경변수에 아래 값을 추가합니다.
    - `DATABASE_URL`: Supabase Postgres 연결 문자열
    - `SANTECH_DEFAULT_PASSWORD`: 기본 계정 비밀번호
+   - `SANTECH_CRON_SECRET`: GitHub Actions가 일일 메일 발송 API를 호출할 때 쓸 임의의 긴 문자열
+   - `SMTP_HOST`: 메일 SMTP 서버
+   - `SMTP_PORT`: 보통 `587`
+   - `SMTP_USERNAME`: SMTP 로그인 계정
+   - `SMTP_PASSWORD`: SMTP 비밀번호 또는 앱 비밀번호
+   - `SMTP_FROM`: 발신자 메일 주소
+   - `SMTP_STARTTLS`: 보통 `true`
 4. Render 서비스의 Deploy Hook URL을 복사합니다.
-5. GitHub 저장소 Settings > Secrets and variables > Actions에 `RENDER_DEPLOY_HOOK_URL` secret으로 Deploy Hook URL을 저장합니다.
+5. GitHub 저장소 Settings > Secrets and variables > Actions에 아래 secret을 저장합니다.
+   - `RENDER_DEPLOY_HOOK_URL`: Render Deploy Hook URL
+   - `SANTECH_APP_URL`: Render 앱 URL. 예: `https://santech-manager.onrender.com`
+   - `SANTECH_CRON_SECRET`: Render 환경변수에 넣은 값과 같은 문자열
 6. 이후 `main` 브랜치에 push하면 GitHub Actions가 문법 검사를 실행하고 Render 배포를 호출합니다.
+7. 매일 한국 시간 오전 9시에 GitHub Actions가 `/api/tasks/daily-email`을 호출해, 메일 서비스를 활성화한 사용자에게 대시보드 요약을 보냅니다.
 
 기본 ID는 `SANTECH_DEFAULT_USERNAME=sago87`로 설정되어 있습니다. 비밀번호는 저장소에 커밋하지 않습니다.
+
+Gmail SMTP를 쓰는 경우 일반 로그인 비밀번호가 아니라 Google 계정의 앱 비밀번호를 `SMTP_PASSWORD`에 넣어야 합니다.
 
 ## API 목록
 

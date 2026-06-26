@@ -219,8 +219,34 @@ fieldset:disabled {
 
 .dashboard-controls {
   display: flex;
+  flex-wrap: wrap;
+  align-items: end;
   justify-content: flex-end;
+  gap: 10px;
   margin: 0 0 12px;
+}
+
+.email-control {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: end;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.email-control input[type="email"] {
+  min-width: 0;
+}
+
+.email-control small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
 }
 
 .check-control {
@@ -676,6 +702,12 @@ tr.is-editing td {
 
   .user-pill {
     display: inline-block;
+  }
+
+  .email-control {
+    grid-template-columns: minmax(220px, 1fr) auto auto auto minmax(130px, auto);
+    width: auto;
+    flex: 1 1 680px;
   }
 
   .summary-grid,

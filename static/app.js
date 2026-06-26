@@ -11,6 +11,7 @@ const state = {
   santechEditingId: null,
   santechCards: [],
   santechRefundFilter: "all",
+  emailSettings: null,
   cream: null,
   mileage: null,
   loaded: {
@@ -142,6 +143,7 @@ function resetAppState() {
   state.santechEditingId = null;
   state.santechCards = [];
   state.santechRefundFilter = "all";
+  state.emailSettings = null;
   state.cream = null;
   state.mileage = null;
   state.loaded = {
@@ -294,6 +296,15 @@ async function loadSantechCards() {
   }
 }
 
+async function loadEmailSettings() {
+  try {
+    state.emailSettings = await apiGet("/api/email-settings");
+    renderEmailSettings();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
 async function submitSantech(event) {
   event.preventDefault();
   if (state.santech?.read_only) {
@@ -321,6 +332,34 @@ async function submitSantech(event) {
     setSantechDateBounds(state.santechMonth);
     updateSantechPreview();
     await refreshAfterMutation("santech");
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+async function submitEmailSettings(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const payload = {
+    email: form.email.value,
+    enabled: form.enabled.checked,
+  };
+  try {
+    clearError();
+    state.emailSettings = await apiPatch("/api/email-settings", payload);
+    renderEmailSettings("저장되었습니다.");
+    showToast("메일 설정이 저장되었습니다.");
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+async function sendTestEmail() {
+  try {
+    clearError();
+    await apiPost("/api/email-settings/test", {});
+    renderEmailSettings("테스트 메일을 보냈습니다.");
+    showToast("테스트 메일을 보냈습니다.");
   } catch (error) {
     showError(error.message);
   }
@@ -526,6 +565,18 @@ function renderDashboard() {
     metricCard("누적 마일리지", formatMile(data.miles.total), "neutral", `대한항공 ${formatNumber(data.miles.korean_air)} · 아시아나 ${formatNumber(data.miles.asiana)} · 하나마일 ${formatNumber(data.miles.hana_mile)}`),
     metricCard("마일 평균 단가", `${formatNumber(data.avg_mile_price.toFixed(2))}원`, "neutral", "상테크 손익 기준"),
   ].join("");
+}
+
+function renderEmailSettings(message = "") {
+  const form = document.getElementById("email-settings-form");
+  if (!form || !state.emailSettings) {
+    return;
+  }
+  form.email.value = state.emailSettings.email || "";
+  form.enabled.checked = Boolean(state.emailSettings.enabled);
+  const status = document.getElementById("daily-email-status");
+  const lastSent = state.emailSettings.last_sent_on ? `마지막 발송 ${state.emailSettings.last_sent_on}` : "아직 발송 전";
+  status.textContent = message || lastSent;
 }
 
 function renderMonthlyTable() {
@@ -1306,6 +1357,8 @@ function bindEvents() {
   });
 
   document.getElementById("santech-form").addEventListener("submit", submitSantech);
+  document.getElementById("email-settings-form").addEventListener("submit", submitEmailSettings);
+  document.getElementById("daily-email-test").addEventListener("click", sendTestEmail);
   document.getElementById("santech-card-form").addEventListener("submit", submitSantechCard);
   document.getElementById("card-benefit-type").addEventListener("change", updateCardBenefitFields);
   document.getElementById("card-unlimited").addEventListener("change", updateCardBenefitFields);
@@ -1389,6 +1442,7 @@ async function loadInitialApp() {
   updateSantechPreview();
   updateCreamPreview();
   await loadDashboard();
+  await loadEmailSettings();
   setupSantechMonths(state.dashboard?.current_month || "2026-07");
   await loadSantech(state.santechMonth);
 }
