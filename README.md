@@ -114,6 +114,7 @@ PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 
 기본 ID는 `SANTECH_DEFAULT_USERNAME=sago87`로 설정되어 있습니다. 비밀번호는 저장소에 커밋하지 않습니다.
 
 Render 무료 Web Service는 SMTP 포트가 막힐 수 있으므로, 무료 운영에서는 `RESEND_API_KEY`를 넣어 Resend HTTP API로 보내는 방식을 권장합니다. `onboarding@resend.dev` 발신자는 Resend 계정 소유 메일로만 테스트 발송할 수 있고, 다른 수신자에게 보내려면 Resend에서 도메인을 인증한 뒤 `RESEND_FROM`을 인증한 도메인 주소로 바꿔야 합니다.
+Resend `1010` 오류는 보통 API 요청의 `User-Agent` 헤더가 없을 때 발생하며, 앱에서는 해당 헤더를 자동으로 포함합니다.
 
 Gmail SMTP를 쓰는 경우 일반 로그인 비밀번호가 아니라 Google 계정의 앱 비밀번호를 `SMTP_PASSWORD`에 넣어야 합니다.
 

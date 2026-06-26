@@ -190,6 +190,7 @@ def _send_resend_email(to_email: str, subject: str, body: str, config: dict):
         headers={
             "Authorization": f"Bearer {config['api_key']}",
             "Content-Type": "application/json",
+            "User-Agent": "santech-manager/1.0",
         },
         method="POST",
     )
