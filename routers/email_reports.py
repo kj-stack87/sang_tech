@@ -1,8 +1,11 @@
+import json
 import os
 import smtplib
 import socket
 from datetime import datetime
 from email.message import EmailMessage
+from urllib import error as urlerror
+from urllib import request as urlrequest
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -112,6 +115,16 @@ def _smtp_config() -> dict:
     }
 
 
+def _resend_config() -> dict | None:
+    api_key = os.getenv("RESEND_API_KEY")
+    if not api_key:
+        return None
+    return {
+        "api_key": api_key,
+        "sender": os.getenv("RESEND_FROM") or "Santech Report <onboarding@resend.dev>",
+    }
+
+
 def _compose_report(db: Session, user: User) -> tuple[str, str]:
     monthly_rows = build_monthly_rows(db, user)
     current_month = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m")
@@ -162,7 +175,42 @@ def _compose_report(db: Session, user: User) -> tuple[str, str]:
     return subject, "\n".join(lines)
 
 
+def _send_resend_email(to_email: str, subject: str, body: str, config: dict):
+    payload = json.dumps(
+        {
+            "from": config["sender"],
+            "to": [to_email],
+            "subject": subject,
+            "text": body,
+        }
+    ).encode("utf-8")
+    request = urlrequest.Request(
+        "https://api.resend.com/emails",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {config['api_key']}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlrequest.urlopen(request, timeout=30) as response:
+            if response.status < 200 or response.status >= 300:
+                detail = response.read().decode("utf-8", errors="replace")
+                raise HTTPException(status_code=502, detail=f"Resend 메일 발송 실패: {detail}")
+    except urlerror.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise HTTPException(status_code=502, detail=f"Resend 메일 발송 실패: {detail}") from exc
+    except urlerror.URLError as exc:
+        raise HTTPException(status_code=502, detail=f"Resend 연결에 실패했습니다: {exc.reason}") from exc
+
+
 def _send_email(to_email: str, subject: str, body: str):
+    resend_config = _resend_config()
+    if resend_config is not None:
+        _send_resend_email(to_email, subject, body, resend_config)
+        return
+
     config = _smtp_config()
     message = EmailMessage()
     message["From"] = config["sender"]

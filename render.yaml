@@ -13,6 +13,10 @@ services:
         sync: false
       - key: SANTECH_CRON_SECRET
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        value: Santech Report <onboarding@resend.dev>
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

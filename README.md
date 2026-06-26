@@ -94,6 +94,8 @@ PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 
    - `DATABASE_URL`: Supabase Postgres 연결 문자열
    - `SANTECH_DEFAULT_PASSWORD`: 기본 계정 비밀번호
    - `SANTECH_CRON_SECRET`: GitHub Actions가 일일 메일 발송 API를 호출할 때 쓸 임의의 긴 문자열
+   - `RESEND_API_KEY`: Render 무료 플랜에서 메일 발송에 사용할 Resend API 키
+   - `RESEND_FROM`: 발신자. 테스트는 `Santech Report <onboarding@resend.dev>`를 사용할 수 있습니다.
    - `SMTP_HOST`: 메일 SMTP 서버
    - `SMTP_PORT`: 보통 `587`
    - `SMTP_USERNAME`: SMTP 로그인 계정
@@ -110,6 +112,8 @@ PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 
 7. 매일 한국 시간 오전 9시에 GitHub Actions가 `/api/tasks/daily-email`을 호출해, 메일 서비스를 활성화한 사용자에게 대시보드 요약을 보냅니다.
 
 기본 ID는 `SANTECH_DEFAULT_USERNAME=sago87`로 설정되어 있습니다. 비밀번호는 저장소에 커밋하지 않습니다.
+
+Render 무료 Web Service는 SMTP 포트가 막힐 수 있으므로, 무료 운영에서는 `RESEND_API_KEY`를 넣어 Resend HTTP API로 보내는 방식을 권장합니다. `onboarding@resend.dev` 발신자는 Resend 계정 소유 메일로만 테스트 발송할 수 있고, 다른 수신자에게 보내려면 Resend에서 도메인을 인증한 뒤 `RESEND_FROM`을 인증한 도메인 주소로 바꿔야 합니다.
 
 Gmail SMTP를 쓰는 경우 일반 로그인 비밀번호가 아니라 Google 계정의 앱 비밀번호를 `SMTP_PASSWORD`에 넣어야 합니다.
 
