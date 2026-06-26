@@ -82,6 +82,18 @@ Render 배포에서는 `render.yaml`의 persistent disk가 `/data`에 마운트�
 3. persistent disk가 `/data`에 연결되어 있는지 확인합니다.
 4. 배포 후 앱은 `uvicorn main:app --host 0.0.0.0 --port $PORT`로 실행됩니다.
 
+## GitHub Actions 배포
+
+PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 계속 실행하는 방식이 아니라, Render Web Service에 배포해야 합니다.
+
+1. Render에서 이 GitHub 저장소를 연결하고 `render.yaml`로 Web Service를 생성합니다.
+2. Render 환경변수에 `SANTECH_DEFAULT_PASSWORD`를 추가하고 기본 계정 비밀번호를 넣습니다.
+3. Render 서비스의 Deploy Hook URL을 복사합니다.
+4. GitHub 저장소 Settings > Secrets and variables > Actions에 `RENDER_DEPLOY_HOOK_URL` secret으로 Deploy Hook URL을 저장합니다.
+5. 이후 `main` 브랜치에 push하면 GitHub Actions가 문법 검사를 실행하고 Render 배포를 호출합니다.
+
+기본 ID는 `SANTECH_DEFAULT_USERNAME=sago87`로 설정되어 있습니다. 비밀번호는 저장소에 커밋하지 않습니다.
+
 ## API 목록
 
 - `GET /api/dashboard`: 누적 수익, 이번 달 수익, 누적 마일리지, 평균 마일 단가. 대시보드 누적 마일리지는 대한항공, 아시아나, 하나마일만 합산합니다.
