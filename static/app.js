@@ -341,27 +341,45 @@ async function submitEmailSettings(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const payload = {
-    email: form.email.value,
-    enabled: form.enabled.checked,
+    email: form.elements.email.value.trim(),
+    enabled: form.elements.enabled.checked,
   };
+  const submitButton = form.querySelector("button[type='submit']");
   try {
     clearError();
+    setEmailStatus("저장 중...");
+    submitButton.disabled = true;
     state.emailSettings = await apiPatch("/api/email-settings", payload);
     renderEmailSettings("저장되었습니다.");
     showToast("메일 설정이 저장되었습니다.");
   } catch (error) {
+    setEmailStatus(error.message);
     showError(error.message);
+  } finally {
+    submitButton.disabled = false;
   }
 }
 
 async function sendTestEmail() {
+  const form = document.getElementById("email-settings-form");
+  const button = document.getElementById("daily-email-test");
+  const payload = {
+    email: form.elements.email.value.trim(),
+    enabled: form.elements.enabled.checked,
+  };
   try {
     clearError();
+    setEmailStatus("테스트 메일 발송 중...");
+    button.disabled = true;
+    state.emailSettings = await apiPatch("/api/email-settings", payload);
     await apiPost("/api/email-settings/test", {});
     renderEmailSettings("테스트 메일을 보냈습니다.");
     showToast("테스트 메일을 보냈습니다.");
   } catch (error) {
+    setEmailStatus(error.message);
     showError(error.message);
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -572,11 +590,17 @@ function renderEmailSettings(message = "") {
   if (!form || !state.emailSettings) {
     return;
   }
-  form.email.value = state.emailSettings.email || "";
-  form.enabled.checked = Boolean(state.emailSettings.enabled);
-  const status = document.getElementById("daily-email-status");
+  form.elements.email.value = state.emailSettings.email || "";
+  form.elements.enabled.checked = Boolean(state.emailSettings.enabled);
   const lastSent = state.emailSettings.last_sent_on ? `마지막 발송 ${state.emailSettings.last_sent_on}` : "아직 발송 전";
-  status.textContent = message || lastSent;
+  setEmailStatus(message || lastSent);
+}
+
+function setEmailStatus(message) {
+  const status = document.getElementById("daily-email-status");
+  if (status) {
+    status.textContent = message;
+  }
 }
 
 function renderMonthlyTable() {

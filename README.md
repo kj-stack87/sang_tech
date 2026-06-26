@@ -100,6 +100,7 @@ PC를 꺼도 휴대폰에서 접속하려면 GitHub Actions가 직접 서버를 
    - `SMTP_PASSWORD`: SMTP 비밀번호 또는 앱 비밀번호
    - `SMTP_FROM`: 발신자 메일 주소
    - `SMTP_STARTTLS`: 보통 `true`
+   - `SMTP_FORCE_IPV4`: Render에서 Gmail SMTP 연결이 막히는 경우를 피하기 위해 `true`
 4. Render 서비스의 Deploy Hook URL을 복사합니다.
 5. GitHub 저장소 Settings > Secrets and variables > Actions에 아래 secret을 저장합니다.
    - `RENDER_DEPLOY_HOOK_URL`: Render Deploy Hook URL

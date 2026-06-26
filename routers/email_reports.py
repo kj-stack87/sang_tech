@@ -1,5 +1,6 @@
 import os
 import smtplib
+import socket
 from datetime import datetime
 from email.message import EmailMessage
 from zoneinfo import ZoneInfo
@@ -15,6 +16,39 @@ from schemas import DailyEmailSettingsUpdate
 
 
 router = APIRouter(prefix="/api", tags=["email-reports"])
+
+
+def _create_ipv4_connection(host: str, port: int, timeout, source_address=None):
+    last_error = None
+    for family, socktype, proto, _canonname, sockaddr in socket.getaddrinfo(
+        host,
+        port,
+        socket.AF_INET,
+        socket.SOCK_STREAM,
+    ):
+        sock = None
+        try:
+            sock = socket.socket(family, socktype, proto)
+            if timeout is not None:
+                sock.settimeout(timeout)
+            if source_address:
+                sock.bind(source_address)
+            sock.connect(sockaddr)
+            return sock
+        except OSError as exc:
+            last_error = exc
+            if sock is not None:
+                sock.close()
+    if last_error is not None:
+        raise last_error
+    raise OSError(f"{host}:{port}의 IPv4 주소를 찾지 못했습니다.")
+
+
+class IPv4SMTP(smtplib.SMTP):
+    def _get_socket(self, host, port, timeout):
+        if self.debuglevel > 0:
+            self._print_debug("connect:", (host, port))
+        return _create_ipv4_connection(host, port, timeout, self.source_address)
 
 
 def _today() -> str:
@@ -74,6 +108,7 @@ def _smtp_config() -> dict:
         "password": password,
         "sender": sender,
         "starttls": os.getenv("SMTP_STARTTLS", "true").lower() != "false",
+        "force_ipv4": os.getenv("SMTP_FORCE_IPV4", "true").lower() != "false",
     }
 
 
@@ -135,11 +170,15 @@ def _send_email(to_email: str, subject: str, body: str):
     message["Subject"] = subject
     message.set_content(body)
 
-    with smtplib.SMTP(config["host"], config["port"], timeout=30) as smtp:
-        if config["starttls"]:
-            smtp.starttls()
-        smtp.login(config["username"], config["password"])
-        smtp.send_message(message)
+    smtp_class = IPv4SMTP if config["force_ipv4"] else smtplib.SMTP
+    try:
+        with smtp_class(config["host"], config["port"], timeout=30) as smtp:
+            if config["starttls"]:
+                smtp.starttls()
+            smtp.login(config["username"], config["password"])
+            smtp.send_message(message)
+    except (OSError, smtplib.SMTPException) as exc:
+        raise HTTPException(status_code=502, detail=f"메일 서버 연결에 실패했습니다: {exc}") from exc
 
 
 def _send_report_for_user(db: Session, user: User, setting: DailyEmailSetting, force: bool = False) -> str:

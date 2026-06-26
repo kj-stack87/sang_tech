@@ -25,3 +25,5 @@ services:
         sync: false
       - key: SMTP_STARTTLS
         value: "true"
+      - key: SMTP_FORCE_IPV4
+        value: "true"
