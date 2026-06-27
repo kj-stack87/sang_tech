@@ -11,6 +11,7 @@ const state = {
   santechEditingId: null,
   santechCards: [],
   santechRefundFilter: "all",
+  santechProductFilters: new Set(),
   emailSettings: null,
   cream: null,
   mileage: null,
@@ -143,6 +144,7 @@ function resetAppState() {
   state.santechEditingId = null;
   state.santechCards = [];
   state.santechRefundFilter = "all";
+  state.santechProductFilters = new Set();
   state.emailSettings = null;
   state.cream = null;
   state.mileage = null;
@@ -645,6 +647,7 @@ function renderSantech() {
 
   renderSantechSummary(data.summary);
   renderSantechCardUsage(data.card_usage || []);
+  syncSantechProductFilterControls();
   renderSantechTransactions(data);
   renderSantechRecent(data.recent_templates || []);
 }
@@ -702,8 +705,10 @@ function renderSantechCardRules() {
 function renderSantechTransactions(data) {
   const tbody = document.getElementById("santech-tbody");
   const tfoot = document.getElementById("santech-tfoot");
+  const productRows = productFilteredSantechTransactions(data.transactions || []);
   const rows = filteredSantechTransactions(data.transactions || []);
   syncSantechSelectAll(false);
+  renderSantechRefundStatus(productRows);
 
   if (!rows.length) {
     tbody.innerHTML = emptyRow(14, data.read_only ? "과거 시드 월은 상세 거래가 없습니다." : "조건에 맞는 거래가 없습니다.");
@@ -726,6 +731,18 @@ function renderSantechTransactions(data) {
       <td colspan="2"></td>
     </tr>
   `;
+}
+
+function renderSantechRefundStatus(rows) {
+  const box = document.getElementById("santech-refund-status");
+  if (!box) {
+    return;
+  }
+  const summary = summarizeSantechRefundStatus(rows);
+  box.innerHTML = [
+    miniMetric("현재 환급금", formatWon(summary.refund)),
+    miniMetric("환급 필요 구매금액", formatWon(summary.pendingPurchase)),
+  ].join("");
 }
 
 function renderSantechTransactionRow(row, readOnly) {
@@ -830,13 +847,27 @@ function renderSantechEditRow(row) {
 }
 
 function filteredSantechTransactions(rows) {
+  const productRows = productFilteredSantechTransactions(rows);
   if (state.santechRefundFilter === "refunded") {
-    return rows.filter(isSantechRefunded);
+    return productRows.filter(isSantechRefunded);
   }
   if (state.santechRefundFilter === "pending") {
-    return rows.filter((row) => !isSantechRefunded(row));
+    return productRows.filter((row) => !isSantechRefunded(row));
   }
-  return rows;
+  return productRows;
+}
+
+function productFilteredSantechTransactions(rows) {
+  if (!state.santechProductFilters.size) {
+    return rows;
+  }
+  return rows.filter((row) => state.santechProductFilters.has(row.product));
+}
+
+function syncSantechProductFilterControls() {
+  document.querySelectorAll("[data-santech-product-filter]").forEach((input) => {
+    input.checked = state.santechProductFilters.has(input.value);
+  });
 }
 
 function isSantechRefunded(row) {
@@ -856,6 +887,19 @@ function summarizeSantechRows(rows) {
       return sum;
     },
     { purchase: 0, refund: 0, cashback: 0, profit: 0, korean_air: 0, asiana: 0, hana_mile: 0 },
+  );
+}
+
+function summarizeSantechRefundStatus(rows) {
+  return rows.reduce(
+    (sum, row) => {
+      sum.refund += Number(row.refund_amount || 0);
+      if (!isSantechRefunded(row)) {
+        sum.pendingPurchase += Number(row.purchase_amount || 0);
+      }
+      return sum;
+    },
+    { refund: 0, pendingPurchase: 0 },
   );
 }
 
@@ -1397,6 +1441,19 @@ function bindEvents() {
   document.getElementById("bulk-delete-apply").addEventListener("click", bulkDeleteSantech);
   document.getElementById("santech-refund-filter").addEventListener("change", (event) => {
     state.santechRefundFilter = event.target.value;
+    renderSantechTransactions(state.santech || { transactions: [], read_only: false });
+  });
+  document.getElementById("santech-product-filter").addEventListener("change", (event) => {
+    const input = event.target.closest("[data-santech-product-filter]");
+    if (!input) {
+      return;
+    }
+    if (input.checked) {
+      state.santechProductFilters.add(input.value);
+    } else {
+      state.santechProductFilters.delete(input.value);
+    }
+    state.santechEditingId = null;
     renderSantechTransactions(state.santech || { transactions: [], read_only: false });
   });
   document.getElementById("santech-select-all").addEventListener("change", (event) => {

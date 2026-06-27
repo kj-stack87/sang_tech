@@ -495,6 +495,51 @@ fieldset:disabled button {
   margin-top: 14px;
 }
 
+.santech-list-tools {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.product-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.product-filter legend {
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.product-filter label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.refund-status-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .bulk-refund-bar {
   display: grid;
   grid-template-columns: 1fr;
@@ -729,6 +774,11 @@ tr.is-editing td {
 
   .bulk-refund-bar {
     grid-template-columns: minmax(160px, 1fr) minmax(130px, 0.8fr) auto auto;
+  }
+
+  .santech-list-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.6fr);
+    align-items: start;
   }
 
   .santech-edit-form {
