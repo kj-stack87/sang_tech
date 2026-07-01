@@ -26,6 +26,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def prevent_static_cache(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.endswith((".html", ".js", ".css")):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
+
+
 app.include_router(dashboard.router)
 app.include_router(santech.router)
 app.include_router(cream.router)
