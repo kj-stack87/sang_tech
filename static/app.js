@@ -336,6 +336,8 @@ async function submitSantech(event) {
     "asiana",
     "hana_mile",
   ]);
+  const preservedProduct = form.product.value;
+  const preservedCard = form.card.value;
 
   try {
     clearError();
@@ -344,6 +346,15 @@ async function submitSantech(event) {
     showToast(`${count}건의 상테크 거래가 저장되었습니다.`);
     form.reset();
     setSantechDateBounds(state.santechMonth);
+    if (santechProductOptions().includes(preservedProduct)) {
+      form.product.value = preservedProduct;
+    }
+    if (santechCardOptions().includes(preservedCard)) {
+      form.card.value = preservedCard;
+    }
+    if (form.product.value !== "신세계상품권") {
+      form.purchase_amount.value = 465000;
+    }
     updateSantechPreview();
     await refreshAfterMutation("santech");
   } catch (error) {
