@@ -1019,13 +1019,12 @@ function summarizeSantechRefundStatus(rows) {
   return rows.reduce(
     (sum, row) => {
       sum.refund += Number(row.refund_amount || 0);
+      sum.simulatedProfit += effectiveSantechProfit(row);
       if (!isSantechRefunded(row)) {
         sum.pendingPurchase += Number(row.purchase_amount || 0);
         sum.pendingShinsegaeFaceValue += estimateShinsegaeFaceValue(row);
         if (isRefundSimulationApplied(row)) {
-          const simulatedRefund = simulatedRefundAmount(row);
-          sum.simulatedRefund += simulatedRefund;
-          sum.simulatedProfit += Number(row.profit || 0) + simulatedRefund;
+          sum.simulatedRefund += simulatedRefundAmount(row);
         }
       }
       return sum;
