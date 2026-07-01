@@ -956,6 +956,17 @@ function estimateShinsegaeFaceValue(row) {
   return Math.round(purchase / 0.978 / 100000) * 100000;
 }
 
+function estimateRefundFaceValue(row) {
+  const purchase = Number(row.purchase_amount || 0);
+  if (purchase <= 0) {
+    return 0;
+  }
+  if (row.product === "신세계상품권") {
+    return estimateShinsegaeFaceValue(row);
+  }
+  return Math.round(purchase / 465000) * 500000;
+}
+
 function isRefundSimulationApplicable(row) {
   return state.refundSimulation.enabled && !isSantechRefunded(row);
 }
@@ -970,7 +981,7 @@ function simulatedRefundAmount(row) {
   }
   const baseAmount = row.product === "신세계상품권" ? 100000 : 500000;
   const unitAmount = row.product === "신세계상품권" ? state.refundSimulation.shinsegaeUnit : state.refundSimulation.otherUnit;
-  return Math.floor((Number(row.purchase_amount || 0) / baseAmount) * Number(unitAmount || 0));
+  return Math.floor((estimateRefundFaceValue(row) / baseAmount) * Number(unitAmount || 0));
 }
 
 function effectiveSantechRefund(row) {
