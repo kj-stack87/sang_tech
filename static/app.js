@@ -12,6 +12,12 @@ const state = {
   santechCards: [],
   santechRefundFilter: "all",
   santechProductFilters: new Set(),
+  refundSimulation: {
+    enabled: false,
+    shinsegaeUnit: 0,
+    otherUnit: 0,
+    excludedIds: new Set(),
+  },
   emailSettings: null,
   cream: null,
   mileage: null,
@@ -145,6 +151,12 @@ function resetAppState() {
   state.santechCards = [];
   state.santechRefundFilter = "all";
   state.santechProductFilters = new Set();
+  state.refundSimulation = {
+    enabled: false,
+    shinsegaeUnit: 0,
+    otherUnit: 0,
+    excludedIds: new Set(),
+  };
   state.emailSettings = null;
   state.cream = null;
   state.mileage = null;
@@ -244,7 +256,7 @@ function switchTab(tabName) {
   if (tabName === "dashboard") {
     loadDashboard();
   }
-  if (tabName === "santech" && state.santechMonth) {
+  if ((tabName === "santech" || tabName === "refund") && state.santechMonth) {
     loadSantech(state.santechMonth);
   }
   if (tabName === "cream") {
@@ -585,6 +597,43 @@ function renderDashboard() {
     metricCard("누적 마일리지", formatMile(data.miles.total), "neutral", `대한항공 ${formatNumber(data.miles.korean_air)} · 아시아나 ${formatNumber(data.miles.asiana)} · 하나마일 ${formatNumber(data.miles.hana_mile)}`),
     metricCard("마일 평균 단가", `${formatNumber(data.avg_mile_price.toFixed(2))}원`, "neutral", "상테크 손익 기준"),
   ].join("");
+  renderRefundSimulationControls();
+}
+
+function renderRefundSimulationControls() {
+  const enabledInput = document.getElementById("refund-simulation-enabled");
+  const panel = document.getElementById("refund-simulation-panel");
+  const shinsegaeInput = document.getElementById("refund-sim-shinsegae");
+  const otherInput = document.getElementById("refund-sim-other");
+  const summaryBox = document.getElementById("refund-simulation-summary");
+  if (!enabledInput || !panel || !shinsegaeInput || !otherInput || !summaryBox) {
+    return;
+  }
+  enabledInput.checked = state.refundSimulation.enabled;
+  panel.hidden = !state.refundSimulation.enabled;
+  shinsegaeInput.value = state.refundSimulation.shinsegaeUnit;
+  otherInput.value = state.refundSimulation.otherUnit;
+
+  const rows = state.santech?.transactions || [];
+  const summary = summarizeSantechRefundStatus(rows);
+  summaryBox.innerHTML = [
+    miniMetric("미환급 구매", formatWon(summary.pendingPurchase)),
+    miniMetric("예상 환급", formatWon(summary.simulatedRefund)),
+    miniMetric("예상 손익", formatProfit(summary.simulatedProfit), profitClass(summary.simulatedProfit)),
+  ].join("");
+}
+
+function updateRefundSimulationFromControls() {
+  const enabledInput = document.getElementById("refund-simulation-enabled");
+  const shinsegaeInput = document.getElementById("refund-sim-shinsegae");
+  const otherInput = document.getElementById("refund-sim-other");
+  state.refundSimulation.enabled = Boolean(enabledInput?.checked);
+  state.refundSimulation.shinsegaeUnit = Number(shinsegaeInput?.value || 0);
+  state.refundSimulation.otherUnit = Number(otherInput?.value || 0);
+  renderRefundSimulationControls();
+  if (state.santech) {
+    renderSantechTransactions(state.santech);
+  }
 }
 
 function renderEmailSettings(message = "") {
@@ -644,12 +693,14 @@ function renderSantech() {
   const readonlyBadge = document.getElementById("santech-readonly");
   readonlyBadge.hidden = !data.read_only;
   document.getElementById("santech-fieldset").disabled = data.read_only;
+  syncSantechMonthControls(data.month);
 
   renderSantechSummary(data.summary);
   renderSantechCardUsage(data.card_usage || []);
   syncSantechProductFilterControls();
   renderSantechTransactions(data);
   renderSantechRecent(data.recent_templates || []);
+  renderRefundSimulationControls();
 }
 
 function renderSantechSummary(summary) {
@@ -711,7 +762,7 @@ function renderSantechTransactions(data) {
   renderSantechRefundStatus(productRows);
 
   if (!rows.length) {
-    tbody.innerHTML = emptyRow(14, data.read_only ? "과거 시드 월은 상세 거래가 없습니다." : "조건에 맞는 거래가 없습니다.");
+    tbody.innerHTML = emptyRow(15, data.read_only ? "과거 시드 월은 상세 거래가 없습니다." : "조건에 맞는 거래가 없습니다.");
   } else {
     tbody.innerHTML = rows.map((row) => renderSantechTransactionRow(row, data.read_only)).join("");
   }
@@ -721,6 +772,7 @@ function renderSantechTransactions(data) {
     <tr>
       <td class="text-left" colspan="4">합계</td>
       <td>${formatWon(summary.purchase)}</td>
+      <td></td>
       <td>${formatWon(summary.refund)}</td>
       <td></td>
       <td>${formatWon(summary.cashback)}</td>
@@ -739,10 +791,17 @@ function renderSantechRefundStatus(rows) {
     return;
   }
   const summary = summarizeSantechRefundStatus(rows);
-  box.innerHTML = [
+  const metrics = [
     miniMetric("현재 환급금", formatWon(summary.refund)),
     miniMetric("환급 필요 구매금액", formatWon(summary.pendingPurchase)),
-  ].join("");
+  ];
+  if (state.refundSimulation.enabled) {
+    metrics.push(
+      miniMetric("모의 예상 환급", formatWon(summary.simulatedRefund)),
+      miniMetric("모의 예상 수익", formatProfit(summary.simulatedProfit), profitClass(summary.simulatedProfit)),
+    );
+  }
+  box.innerHTML = metrics.join("");
 }
 
 function renderSantechTransactionRow(row, readOnly) {
@@ -766,10 +825,11 @@ function renderSantechTransactionRow(row, readOnly) {
       <td class="${editableClass}"${editAttr}>${escapeHtml(row.product)}</td>
       <td class="${editableClass}"${editAttr}>${escapeHtml(row.card)}</td>
       <td${numberEditAttr}>${formatWon(row.purchase_amount)}</td>
-      <td${numberEditAttr}>${formatWon(row.refund_amount)}</td>
+      <td>${renderRefundSimulationToggle(row)}</td>
+      <td${numberEditAttr}>${renderRefundAmount(row)}</td>
       <td class="${editableClass}"${editAttr}>${escapeHtml(row.refund_vendor || "미입력")}</td>
       <td>${formatWon(row.cashback_amount)}</td>
-      <td class="${profitClass(row.profit)}">${formatProfit(row.profit)}</td>
+      <td class="${profitClass(effectiveSantechProfit(row))}">${formatProfit(effectiveSantechProfit(row))}</td>
       <td${numberEditAttr}>${formatNumber(row.korean_air)}</td>
       <td${numberEditAttr}>${formatNumber(row.asiana)}</td>
       <td>${formatNumber(row.hana_mile)}</td>
@@ -798,7 +858,7 @@ function renderSantechEditRow(row) {
 
   return `
     <tr class="santech-edit-row">
-      <td colspan="14">
+      <td colspan="15">
         <form class="santech-edit-form" data-santech-edit-form="${row.id}">
           <label>
             <span>날짜</span>
@@ -874,13 +934,56 @@ function isSantechRefunded(row) {
   return Number(row.refund_amount || 0) > 0 && Boolean(row.refund_vendor);
 }
 
+function isRefundSimulationApplicable(row) {
+  return state.refundSimulation.enabled && !isSantechRefunded(row);
+}
+
+function isRefundSimulationApplied(row) {
+  return isRefundSimulationApplicable(row) && !state.refundSimulation.excludedIds.has(String(row.id));
+}
+
+function simulatedRefundAmount(row) {
+  if (!isRefundSimulationApplied(row)) {
+    return 0;
+  }
+  const baseAmount = row.product === "신세계상품권" ? 100000 : 500000;
+  const unitAmount = row.product === "신세계상품권" ? state.refundSimulation.shinsegaeUnit : state.refundSimulation.otherUnit;
+  return Math.floor((Number(row.purchase_amount || 0) / baseAmount) * Number(unitAmount || 0));
+}
+
+function effectiveSantechRefund(row) {
+  return isRefundSimulationApplied(row) ? simulatedRefundAmount(row) : Number(row.refund_amount || 0);
+}
+
+function effectiveSantechProfit(row) {
+  if (!isRefundSimulationApplied(row)) {
+    return Number(row.profit || 0);
+  }
+  return Number(row.profit || 0) + simulatedRefundAmount(row);
+}
+
+function renderRefundSimulationToggle(row) {
+  if (!isRefundSimulationApplicable(row)) {
+    return '<span class="muted-cell">-</span>';
+  }
+  const checked = isRefundSimulationApplied(row) ? " checked" : "";
+  return `<input type="checkbox" data-refund-sim-toggle="${row.id}" aria-label="모의 계산 적용"${checked} />`;
+}
+
+function renderRefundAmount(row) {
+  if (!isRefundSimulationApplied(row)) {
+    return formatWon(row.refund_amount);
+  }
+  return `${formatWon(simulatedRefundAmount(row))}<small class="sim-note">모의</small>`;
+}
+
 function summarizeSantechRows(rows) {
   return rows.reduce(
     (sum, row) => {
       sum.purchase += Number(row.purchase_amount || 0);
-      sum.refund += Number(row.refund_amount || 0);
+      sum.refund += effectiveSantechRefund(row);
       sum.cashback += Number(row.cashback_amount || 0);
-      sum.profit += Number(row.profit || 0);
+      sum.profit += effectiveSantechProfit(row);
       sum.korean_air += Number(row.korean_air || 0);
       sum.asiana += Number(row.asiana || 0);
       sum.hana_mile += Number(row.hana_mile || 0);
@@ -896,10 +999,15 @@ function summarizeSantechRefundStatus(rows) {
       sum.refund += Number(row.refund_amount || 0);
       if (!isSantechRefunded(row)) {
         sum.pendingPurchase += Number(row.purchase_amount || 0);
+        if (isRefundSimulationApplied(row)) {
+          const simulatedRefund = simulatedRefundAmount(row);
+          sum.simulatedRefund += simulatedRefund;
+          sum.simulatedProfit += Number(row.profit || 0) + simulatedRefund;
+        }
       }
       return sum;
     },
-    { refund: 0, pendingPurchase: 0 },
+    { refund: 0, pendingPurchase: 0, simulatedRefund: 0, simulatedProfit: 0 },
   );
 }
 
@@ -1221,6 +1329,14 @@ function updateSantechPreview() {
   preview.className = `profit-preview ${profitClass(profit)}`;
 }
 
+function applySantechProductDefault() {
+  const form = document.getElementById("santech-form");
+  if (form.product.value !== "신세계상품권") {
+    form.purchase_amount.value = 465000;
+  }
+  updateSantechPreview();
+}
+
 function calculateSantechBenefits(card, purchase) {
   const amount = Number(purchase) || 0;
   const benefits = { point_amount: 0, cashback_amount: 0, korean_air: 0, asiana: 0, hana_mile: 0 };
@@ -1281,13 +1397,21 @@ async function refreshAfterMutation(area) {
 }
 
 function setupSantechMonths(currentMonth) {
-  const select = document.getElementById("santech-month");
+  const selects = [document.getElementById("santech-month"), document.getElementById("refund-month")].filter(Boolean);
   const endMonth = maxMonth(currentMonth, "2026-07");
   const months = monthRange("2026-01", endMonth);
-  select.innerHTML = months.map((month) => `<option value="${month}">${month}</option>`).join("");
-  select.value = endMonth;
+  selects.forEach((select) => {
+    select.innerHTML = months.map((month) => `<option value="${month}">${month}</option>`).join("");
+    select.value = endMonth;
+  });
   state.santechMonth = endMonth;
   setSantechDateBounds(endMonth);
+}
+
+function syncSantechMonthControls(month) {
+  document.querySelectorAll("#santech-month, #refund-month").forEach((select) => {
+    select.value = month;
+  });
 }
 
 function setSantechDateBounds(month) {
@@ -1423,6 +1547,11 @@ function bindEvents() {
     setSantechDateBounds(month);
     loadSantech(month);
   });
+  document.getElementById("refund-month").addEventListener("change", (event) => {
+    const month = event.target.value;
+    setSantechDateBounds(month);
+    loadSantech(month);
+  });
 
   document.getElementById("santech-form").addEventListener("submit", submitSantech);
   document.getElementById("email-settings-form").addEventListener("submit", submitEmailSettings);
@@ -1437,6 +1566,9 @@ function bindEvents() {
     state.includeCurrentMonth = event.target.checked;
     await loadDashboard();
   });
+  document.getElementById("refund-simulation-enabled").addEventListener("change", updateRefundSimulationFromControls);
+  document.getElementById("refund-sim-shinsegae").addEventListener("input", updateRefundSimulationFromControls);
+  document.getElementById("refund-sim-other").addEventListener("input", updateRefundSimulationFromControls);
   document.getElementById("bulk-refund-apply").addEventListener("click", bulkUpdateSantechRefund);
   document.getElementById("bulk-delete-apply").addEventListener("click", bulkDeleteSantech);
   document.getElementById("santech-refund-filter").addEventListener("change", (event) => {
@@ -1466,6 +1598,7 @@ function bindEvents() {
   document.querySelectorAll("#santech-form input").forEach((input) => {
     input.addEventListener("input", updateSantechPreview);
   });
+  document.querySelector('#santech-form select[name="product"]').addEventListener("change", applySantechProductDefault);
   document.querySelectorAll("#santech-form select").forEach((select) => {
     select.addEventListener("change", updateSantechPreview);
   });
@@ -1504,6 +1637,16 @@ function bindEvents() {
     const transactionCheckbox = event.target.closest("[data-santech-select]");
     if (transactionCheckbox) {
       updateSantechSelectAllState();
+    }
+    const refundSimulationCheckbox = event.target.closest("[data-refund-sim-toggle]");
+    if (refundSimulationCheckbox) {
+      if (refundSimulationCheckbox.checked) {
+        state.refundSimulation.excludedIds.delete(refundSimulationCheckbox.dataset.refundSimToggle);
+      } else {
+        state.refundSimulation.excludedIds.add(refundSimulationCheckbox.dataset.refundSimToggle);
+      }
+      renderRefundSimulationControls();
+      renderSantechTransactions(state.santech || { transactions: [], read_only: false });
     }
   });
 

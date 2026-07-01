@@ -64,6 +64,21 @@
             <input type="checkbox" id="dashboard-include-current" checked />
             <span>당월 포함</span>
           </label>
+          <label class="check-control">
+            <input type="checkbox" id="refund-simulation-enabled" />
+            <span>모의 환급 계산</span>
+          </label>
+        </div>
+        <div id="refund-simulation-panel" class="refund-simulation-panel" hidden>
+          <label>
+            <span>신세계 10만원당</span>
+            <input type="number" id="refund-sim-shinsegae" min="0" step="1" inputmode="numeric" value="0" />
+          </label>
+          <label>
+            <span>기타 50만원당</span>
+            <input type="number" id="refund-sim-other" min="0" step="1" inputmode="numeric" value="0" />
+          </label>
+          <div id="refund-simulation-summary" class="refund-simulation-summary"></div>
         </div>
         <div id="dashboard-cards" class="summary-grid"></div>
 
@@ -293,9 +308,17 @@
           </form>
         </section>
 
+      </section>
+
+      <section id="refund-view" class="tab-panel">
+        <div class="section-heading top-line">
+          <h2>환급</h2>
+          <select id="refund-month" aria-label="환급 월 선택"></select>
+        </div>
+
         <section class="surface">
           <div class="section-heading">
-            <h2>거래 목록</h2>
+            <h2>환급 목록</h2>
             <select id="santech-refund-filter" aria-label="환급 상태 필터">
               <option value="all">전체</option>
               <option value="refunded">환급완료</option>
@@ -342,6 +365,7 @@
                   <th>구매상품</th>
                   <th>카드</th>
                   <th>매매</th>
+                  <th>모의</th>
                   <th>환급</th>
                   <th>환급처</th>
                   <th>캐시백</th>
@@ -481,6 +505,10 @@
       <button class="nav-button" type="button" data-tab="santech">
         <span aria-hidden="true">◇</span>
         <span>상테크</span>
+      </button>
+      <button class="nav-button" type="button" data-tab="refund">
+        <span aria-hidden="true">□</span>
+        <span>환급</span>
       </button>
       <button class="nav-button" type="button" data-tab="cream">
         <span aria-hidden="true">○</span>
