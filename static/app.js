@@ -804,8 +804,11 @@ function renderSantechRefundStatus(rows) {
   const summary = summarizeSantechRefundStatus(rows);
   const metrics = [
     miniMetric("현재 환급금", formatWon(summary.refund)),
-    miniMetric("환급 필요 구매금액", formatWon(summary.pendingPurchase)),
+    miniMetric("환급필요", formatWon(summary.pendingPurchase)),
   ];
+  if (summary.pendingShinsegaeFaceValue > 0) {
+    metrics.push(miniMetric("신세계 환급 필요", `${formatWon(summary.pendingShinsegaeFaceValue)} 상품권`));
+  }
   if (state.refundSimulation.enabled) {
     metrics.push(
       miniMetric("모의 예상 환급", formatWon(summary.simulatedRefund)),
@@ -945,6 +948,14 @@ function isSantechRefunded(row) {
   return Number(row.refund_amount || 0) > 0 && Boolean(row.refund_vendor);
 }
 
+function estimateShinsegaeFaceValue(row) {
+  const purchase = Number(row.purchase_amount || 0);
+  if (row.product !== "신세계상품권" || purchase <= 0) {
+    return 0;
+  }
+  return Math.round(purchase / 0.978 / 100000) * 100000;
+}
+
 function isRefundSimulationApplicable(row) {
   return state.refundSimulation.enabled && !isSantechRefunded(row);
 }
@@ -1010,6 +1021,7 @@ function summarizeSantechRefundStatus(rows) {
       sum.refund += Number(row.refund_amount || 0);
       if (!isSantechRefunded(row)) {
         sum.pendingPurchase += Number(row.purchase_amount || 0);
+        sum.pendingShinsegaeFaceValue += estimateShinsegaeFaceValue(row);
         if (isRefundSimulationApplied(row)) {
           const simulatedRefund = simulatedRefundAmount(row);
           sum.simulatedRefund += simulatedRefund;
@@ -1018,7 +1030,7 @@ function summarizeSantechRefundStatus(rows) {
       }
       return sum;
     },
-    { refund: 0, pendingPurchase: 0, simulatedRefund: 0, simulatedProfit: 0 },
+    { refund: 0, pendingPurchase: 0, pendingShinsegaeFaceValue: 0, simulatedRefund: 0, simulatedProfit: 0 },
   );
 }
 
