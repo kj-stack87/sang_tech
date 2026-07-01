@@ -172,68 +172,6 @@
           </div>
         </section>
 
-        <section class="surface">
-          <div class="section-heading">
-            <h2>카드 관리</h2>
-          </div>
-          <form id="santech-card-form" class="card-rule-form">
-            <label>
-              <span>카드명</span>
-              <input type="text" name="name" maxlength="40" required />
-            </label>
-            <label>
-              <span>혜택</span>
-              <select name="benefit_type" id="card-benefit-type">
-                <option value="mileage">마일리지</option>
-                <option value="cashback">캐시백</option>
-                <option value="discount">청구할인</option>
-              </select>
-            </label>
-            <label class="card-mileage-field">
-              <span>적립처</span>
-              <select name="mileage_target">
-                <option value="korean_air">대한항공</option>
-                <option value="asiana">아시아나</option>
-                <option value="hana_mile" selected>하나마일</option>
-              </select>
-            </label>
-            <label class="card-mileage-field">
-              <span>사용금액</span>
-              <input type="number" name="mileage_spend_amount" min="1" step="1" inputmode="numeric" value="1500" />
-            </label>
-            <label class="card-mileage-field">
-              <span>적립마일</span>
-              <input type="number" name="mileage_earn_amount" min="0" step="0.1" inputmode="decimal" value="1" />
-            </label>
-            <label class="card-rate-field">
-              <span>혜택률(%)</span>
-              <input type="number" name="reward_rate" min="0" step="0.1" inputmode="decimal" value="1" />
-            </label>
-            <label class="card-rate-field card-cap-field">
-              <span>월 한도</span>
-              <input type="number" name="monthly_cap" min="1" step="1" inputmode="numeric" value="100000" />
-            </label>
-            <label class="checkbox-label card-rate-field">
-              <input type="checkbox" name="is_unlimited" id="card-unlimited" checked />
-              <span>무제한</span>
-            </label>
-            <button class="secondary-button" type="submit">카드 추가</button>
-          </form>
-          <div class="table-wrap compact-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>카드</th>
-                  <th>혜택</th>
-                  <th>조건</th>
-                  <th>삭제</th>
-                </tr>
-              </thead>
-              <tbody id="santech-card-rules-tbody"></tbody>
-            </table>
-          </div>
-        </section>
-
         <section class="surface tool-surface">
           <form id="santech-form">
             <fieldset id="santech-fieldset">
@@ -308,6 +246,68 @@
               </div>
             </fieldset>
           </form>
+        </section>
+
+        <section class="surface">
+          <div class="section-heading">
+            <h2>카드 관리</h2>
+          </div>
+          <form id="santech-card-form" class="card-rule-form">
+            <label>
+              <span>카드명</span>
+              <input type="text" name="name" maxlength="40" required />
+            </label>
+            <label>
+              <span>혜택</span>
+              <select name="benefit_type" id="card-benefit-type">
+                <option value="mileage">마일리지</option>
+                <option value="cashback">캐시백</option>
+                <option value="discount">청구할인</option>
+              </select>
+            </label>
+            <label class="card-mileage-field">
+              <span>적립처</span>
+              <select name="mileage_target">
+                <option value="korean_air">대한항공</option>
+                <option value="asiana">아시아나</option>
+                <option value="hana_mile" selected>하나마일</option>
+              </select>
+            </label>
+            <label class="card-mileage-field">
+              <span>사용금액</span>
+              <input type="number" name="mileage_spend_amount" min="1" step="1" inputmode="numeric" value="1500" />
+            </label>
+            <label class="card-mileage-field">
+              <span>적립마일</span>
+              <input type="number" name="mileage_earn_amount" min="0" step="0.1" inputmode="decimal" value="1" />
+            </label>
+            <label class="card-rate-field">
+              <span>혜택률(%)</span>
+              <input type="number" name="reward_rate" min="0" step="0.1" inputmode="decimal" value="1" />
+            </label>
+            <label class="card-rate-field card-cap-field">
+              <span>월 한도</span>
+              <input type="number" name="monthly_cap" min="1" step="1" inputmode="numeric" value="100000" />
+            </label>
+            <label class="checkbox-label card-rate-field">
+              <input type="checkbox" name="is_unlimited" id="card-unlimited" checked />
+              <span>무제한</span>
+            </label>
+            <button class="secondary-button" type="submit">카드 추가</button>
+          </form>
+          <div class="table-wrap compact-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>카드</th>
+                  <th>혜택</th>
+                  <th>조건</th>
+                  <th>삭제</th>
+                </tr>
+              </thead>
+              <tbody id="santech-card-rules-tbody"></tbody>
+            </table>
+          </div>
         </section>
 
       </section>
