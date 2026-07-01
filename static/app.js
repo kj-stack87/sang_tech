@@ -643,6 +643,7 @@ function updateRefundSimulationFromControls() {
   state.refundSimulation.otherUnit = Number(otherInput?.value || 0);
   renderRefundSimulationControls();
   if (state.santech) {
+    renderSantechSummary(state.santech.summary);
     renderSantechTransactions(state.santech);
   }
 }
@@ -715,13 +716,32 @@ function renderSantech() {
 }
 
 function renderSantechSummary(summary) {
-  const totalMiles = summary.korean_air + summary.asiana + summary.hana_mile;
+  const displaySummary = effectiveSantechSummary(summary);
+  const totalMiles = displaySummary.korean_air + displaySummary.asiana + displaySummary.hana_mile;
   document.getElementById("santech-summary").innerHTML = [
-    miniMetric("매매", formatWon(summary.purchase)),
-    miniMetric("환급", formatWon(summary.refund)),
-    miniMetric("수익", formatProfit(summary.profit), profitClass(summary.profit)),
+    miniMetric("매매", formatWon(displaySummary.purchase)),
+    miniMetric("환급", formatWon(displaySummary.refund)),
+    miniMetric("수익", formatProfit(displaySummary.profit), profitClass(displaySummary.profit)),
     miniMetric("마일", formatMile(totalMiles)),
   ].join("");
+}
+
+function effectiveSantechSummary(summary) {
+  const rows = state.santech?.transactions || [];
+  if (!state.refundSimulation.enabled || !rows.length) {
+    return summary;
+  }
+  const rowSummary = summarizeSantechRows(rows);
+  return {
+    ...summary,
+    purchase: rowSummary.purchase,
+    refund: rowSummary.refund,
+    cashback: rowSummary.cashback,
+    profit: rowSummary.profit,
+    korean_air: rowSummary.korean_air,
+    asiana: rowSummary.asiana,
+    hana_mile: rowSummary.hana_mile,
+  };
 }
 
 function renderSantechCards() {
@@ -1679,6 +1699,9 @@ function bindEvents() {
         state.refundSimulation.excludedIds.add(refundSimulationCheckbox.dataset.refundSimToggle);
       }
       renderRefundSimulationControls();
+      if (state.santech) {
+        renderSantechSummary(state.santech.summary);
+      }
       renderSantechTransactions(state.santech || { transactions: [], read_only: false });
     }
   });
