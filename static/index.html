@@ -64,21 +64,6 @@
             <input type="checkbox" id="dashboard-include-current" checked />
             <span>당월 포함</span>
           </label>
-          <label class="check-control">
-            <input type="checkbox" id="refund-simulation-enabled" />
-            <span>모의 환급 계산</span>
-          </label>
-        </div>
-        <div id="refund-simulation-panel" class="refund-simulation-panel" hidden>
-          <label>
-            <span>신세계 10만원당</span>
-            <input type="number" id="refund-sim-shinsegae" min="0" step="1" inputmode="numeric" value="0" />
-          </label>
-          <label>
-            <span>기타 50만원당</span>
-            <input type="number" id="refund-sim-other" min="0" step="1" inputmode="numeric" value="0" />
-          </label>
-          <div id="refund-simulation-summary" class="refund-simulation-summary"></div>
         </div>
         <div id="dashboard-cards" class="summary-grid"></div>
 
@@ -146,6 +131,23 @@
 
         <div id="santech-readonly" class="readonly-badge" hidden>시드 데이터 / 읽기 전용</div>
         <div id="santech-summary" class="metric-strip"></div>
+        <div class="santech-simulation-controls">
+          <label class="check-control">
+            <input type="checkbox" id="refund-simulation-enabled" />
+            <span>모의 환급 계산</span>
+          </label>
+        </div>
+        <div id="refund-simulation-panel" class="refund-simulation-panel" hidden>
+          <label>
+            <span>신세계 10만원당</span>
+            <input type="number" id="refund-sim-shinsegae" min="0" step="1" inputmode="numeric" value="0" />
+          </label>
+          <label>
+            <span>기타 50만원당</span>
+            <input type="number" id="refund-sim-other" min="0" step="1" inputmode="numeric" value="0" />
+          </label>
+          <div id="refund-simulation-summary" class="refund-simulation-summary"></div>
+        </div>
 
         <section class="surface">
           <div class="section-heading">

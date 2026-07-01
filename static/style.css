@@ -274,6 +274,12 @@ fieldset:disabled {
   font-size: 13px;
 }
 
+.santech-simulation-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin: -4px 0 12px;
+}
+
 .refund-simulation-panel {
   display: grid;
   grid-template-columns: 1fr;
